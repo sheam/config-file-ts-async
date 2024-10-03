@@ -8,7 +8,7 @@
     "allowSyntheticDefaultImports": true,
     "emitDeclarationOnly": true,
     "declaration": true,
-    "outDir": "./dist",
+    "outFile": "./dist/index.d.ts",
     "skipLibCheck": true
   },
   "include": ["src/index.ts"]

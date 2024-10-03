@@ -3,8 +3,9 @@ node_modules/.bin/
 src/testdir
 node_modules/
 dist/
-.template-scaffolder-ts-cache/
+.config-file-ts*/
 .npmrc
 testsrc/
 .yalc/
 yalc.lock
+

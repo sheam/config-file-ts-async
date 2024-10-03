@@ -1,16 +1,5 @@
-import {
-  compileIfNecessary,
-  jsOutFile,
-  expectFilesExist,
-  symLinkForce,
-} from './compileUtil.js';
-import { defaultOutDir, loadTsConfig } from './loadTsConfig.js';
+import { loadTsConfig } from './loadTsConfig.js';
+import { CacheConfig } from './types.js';
 
-export {
-  defaultOutDir,
-  compileIfNecessary,
-  jsOutFile,
-  expectFilesExist,
-  loadTsConfig,
-  symLinkForce,
-};
+export { loadTsConfig };
+export type { CacheConfig };

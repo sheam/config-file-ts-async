@@ -44,9 +44,9 @@
     "ts-jest": "^29.2.5"
   },
   "scripts": {
-    "build:all": "npm run build:clean && npm run build:exe && npm run build:types",
+    "build:all": "npm run build:clean && npm run build:compile && npm run build:types",
     "build:types": "tsc --project ./tsconfig.types.json",
-    "build:exe": "tsc",
+    "build:compile": "tsc",
     "build:clean": "npx rimraf dist",
     "test:all": "jest src",
     "publish:login": "npm login",

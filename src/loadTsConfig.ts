@@ -1,21 +1,32 @@
 import os, { platform } from 'os';
 import path from 'path';
 import { compileConfigIfNecessary } from './compileUtil.js';
+import { DEFAULT_CACHE_DIR } from './constants.js';
+import { CacheConfig } from './types.js';
+
+interface IDefaultModule<TConfig extends object> {
+  default: TConfig;
+}
 
 /** Load a typescript configuration file.
  * For speed, the typescript file is transpiled to javascript and cached.
  *
- * @param T type of default export value in the configuration file
- * @param outDir location to store the compiled javascript.
- *  Defaults to $HOME/.cache/config-file-ts/<ts-file-path>/
+ * @param tsFile the file to compile
+ * @param cacheConfig where to cache files.
+ * @param strict use strict compilation mode
  * @returns the default exported value from the configuration file or undefined
  */
-export function loadTsConfig<T>(
+// export async function loadTsConfig<TConfig extends object>(
+//   tsFile: string,
+//   cacheConfig: CacheConfig,
+//   strict = true
+// ): Promise<TConfig | undefined> {
+export function loadTsConfig<TConfig extends object>(
   tsFile: string,
-  outDir?: string | undefined,
+  cacheConfig: CacheConfig,
   strict = true
-): T | undefined {
-  const realOutDir = outDir || defaultOutDir(tsFile);
+): TConfig | undefined {
+  const realOutDir = getOutDir(tsFile, cacheConfig);
   const jsConfig = compileConfigIfNecessary(tsFile, realOutDir, strict);
   if (!jsConfig) {
     return undefined;
@@ -23,21 +34,38 @@ export function loadTsConfig<T>(
 
   const end = jsConfig.length - path.extname(jsConfig).length;
   const requirePath = jsConfig.slice(0, end);
-  // TODO: this has to be switched to import
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // const config = await import(requirePath);
+  // eslint-disable-next-line
   const config = require(requirePath);
-  return config.default;
+  return (config as IDefaultModule<TConfig>).default;
 }
 
-/** @return the directory that will be used to store transpilation output. */
-export function defaultOutDir(
-  tsFile: string,
-  programName: string = 'config-file-ts'
-): string {
-  const tsPath = path.resolve(tsFile);
-  let smushedPath = tsPath.split(path.sep).join('-').slice(1);
-  if (platform() === 'win32') {
-    smushedPath = smushedPath.replace(/^:/, '');
+/**
+ * Get the output directory for the file.
+ * @param tsFile absolute path to ts file to compile
+ * @param cacheConfig configuration of cache directory
+ */
+export function getOutDir(tsFile: string, cacheConfig: CacheConfig): string {
+  const tsFileDir = path.dirname(path.resolve(tsFile));
+
+  if (cacheConfig.type === 'global') {
+    const safePath =
+      platform() === 'win32' ? tsFileDir.replace(/^(.+):/, '$1') : tsFileDir;
+    return path.join(
+      os.homedir(),
+      DEFAULT_CACHE_DIR,
+      cacheConfig.programName.replace(/[^a-z0-9]+/gi, '-'),
+      safePath
+    );
+  } else if (cacheConfig.type === 'local') {
+    const subDir = cacheConfig.cacheDir || DEFAULT_CACHE_DIR;
+    if (path.isAbsolute(subDir)) {
+      throw new Error(
+        `cache directory '${subDir}' is not a path relative to the project root '${process.cwd()}'.`
+      );
+    }
+    const relativePath = tsFileDir.replace(process.cwd(), '');
+    return path.join(process.cwd(), subDir, relativePath);
   }
-  return path.join(os.homedir(), '.cache', programName, smushedPath);
+  throw new Error('unknown cache config type');
 }
