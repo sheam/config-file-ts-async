@@ -1,5 +1,10 @@
-node_modules
-dist
-.vscode
-.DS_Store
-build
+yarn-error.log
+node_modules/.bin/
+src/testdir
+node_modules/
+dist/
+.template-scaffolder-ts-cache/
+.npmrc
+testsrc/
+.yalc/
+yalc.lock

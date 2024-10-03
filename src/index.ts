@@ -2,9 +2,9 @@ import {
   compileIfNecessary,
   jsOutFile,
   expectFilesExist,
-  symLinkForce
-} from "./compileUtil";
-import { defaultOutDir, loadTsConfig } from "./loadTsConfig";
+  symLinkForce,
+} from './compileUtil.js';
+import { defaultOutDir, loadTsConfig } from './loadTsConfig.js';
 
 export {
   defaultOutDir,
@@ -12,5 +12,5 @@ export {
   jsOutFile,
   expectFilesExist,
   loadTsConfig,
-  symLinkForce
+  symLinkForce,
 };
