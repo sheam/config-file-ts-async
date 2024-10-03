@@ -9,7 +9,8 @@
     "emitDeclarationOnly": true,
     "declaration": true,
     "outFile": "./dist/index.d.ts",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "stripInternal": true
   },
   "include": ["src/index.ts"]
 }

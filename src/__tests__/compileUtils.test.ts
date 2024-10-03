@@ -21,19 +21,19 @@ test('jsOutFile (non-windows)', () => {
   expect(outFile).toEqual(path.join('out', cwd, 'test', 'example.config.js'));
 });
 
-test('nearestNodeModules', () => {
-  const nodeModules = nearestNodeModules('test')!;
+test('nearestNodeModules', async () => {
+  const nodeModules = await nearestNodeModules('test')!;
   const expectedPath = path.join(path.resolve(process.cwd()), 'node_modules');
   expect(nodeModules).toEqual(expectedPath);
 });
 
-test('symLinkForce deletes if necessary', () => {
+test('symLinkForce deletes if necessary', async () => {
   const tempDir = fs.mkdtempSync('symLinkTest');
   const link = path.join(tempDir, 'link');
   try {
     expect(fs.existsSync(link)).toBeFalsy();
-    symLinkForce('/', link);
-    symLinkForce('/', link);
+    await symLinkForce('/', link);
+    await symLinkForce('/', link);
     expect(fs.existsSync(link)).toBeTruthy();
     expect(fs.lstatSync(link).isSymbolicLink()).toBeTruthy();
   } finally {

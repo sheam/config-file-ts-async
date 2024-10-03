@@ -3,7 +3,7 @@ interface IGlobalCacheConfig {
    * Use global if this will be used in a utility application that may be run from any directory.
    * The cache directory will the users home directory.
    */
-  type: 'global';
+  cacheType: 'global';
 
   /**
    * Name of the program. Use to avoid collision in the global cache directory.
@@ -17,7 +17,7 @@ interface IProjectCacheConfig {
    * The cache directory will be placed in the current working directory;
    * In the case of an NPM script this is always beside the package.json file.
    */
-  type: 'local';
+  cacheType: 'local';
 
   /**
    * Name of the cash dir relative to the package.json file. Defaults to the value of DEFAULT_CACHE_DIR.
@@ -26,3 +26,14 @@ interface IProjectCacheConfig {
 }
 
 export type CacheConfig = IGlobalCacheConfig | IProjectCacheConfig;
+
+export interface ICompileIfNecessaryResult {
+  success: boolean;
+  compiled: boolean;
+  output?: string;
+}
+
+export interface CompileResult {
+  localSources: string[];
+  compiled: boolean;
+}

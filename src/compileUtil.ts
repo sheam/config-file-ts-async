@@ -1,43 +1,44 @@
-import fs from 'fs';
+import { lstat, readFile, stat, symlink, unlink, writeFile } from 'fs/promises';
 import path from 'path';
 import { glob } from 'glob';
-import ts from 'typescript';
+import { ModuleKind, ModuleResolutionKind, ScriptTarget } from 'typescript';
 import { tsCompile } from './tsCompile.js';
+import { ICompileIfNecessaryResult } from './types.js';
+import { existsAsync } from './util.js';
 
-const fsRoot = path.parse(process.cwd()).root;
+const FS_ROOT = path.parse(process.cwd()).root;
 
-/** Return true if any files need compiling */
-export function needsCompile(srcGlobs: string[], outDir: string): boolean {
-  const files = srcGlobs.flatMap(src => glob.sync(src));
+/**
+ * Determine if any files need compiling
+ * @internal
+ * @param srcGlobs globs for source files.
+ * @param outDir output directory for compilation
+ */
+export async function needsCompile(
+  srcGlobs: string[],
+  outDir: string
+): Promise<boolean> {
+  const filePromises = srcGlobs.flatMap(src => glob.glob(src));
+  const fileLists = await Promise.all(filePromises);
+  const files = fileLists.flat(1);
   const srcDestPairs = compilationPairs(files, outDir);
   return anyOutDated(srcDestPairs);
 }
 
-/** Return true if all files exist on the filesystem */
-export function expectFilesExist(files: string[]): boolean {
-  const missing = files.find(file => !fs.existsSync(file));
-  if (missing) {
-    return false;
-  }
-  return true;
-}
-
-/** @return path to the js file that will be produced by typescript compilation */
+/**
+ * Determine the output file path
+ * @internal
+ * @param tsFile file to compile
+ * @param outDir output directory
+ * @return path to the js file that will be produced by typescript compilation
+ */
 export function jsOutFile(tsFile: string, outDir: string): string {
   const tsAbsolutePath = path.resolve(tsFile);
   const tsAbsoluteDir = path.dirname(tsAbsolutePath);
-  const dirFromRoot = path.relative(fsRoot, tsAbsoluteDir);
+  const dirFromRoot = path.relative(FS_ROOT, tsAbsoluteDir);
   const jsDir = path.join(outDir, dirFromRoot);
   const outFile = changeSuffix(path.basename(tsFile), '.js');
   return path.join(jsDir, outFile);
-}
-
-// for tests
-export let _compileCount = 0;
-export function _withCompileCount(fn: () => void): number {
-  _compileCount = 0;
-  fn();
-  return _compileCount;
 }
 
 /*
@@ -58,59 +59,87 @@ So we use the file system root as the rootDir to be conservative in handling
 potential parent directory imports.
 */
 
-export function compileIfNecessary(
+/**
+ * Compile if output is not stale
+ * @internal
+ * @param sources sources to compile
+ * @param outDir output directory
+ * @param strict use strict compilation
+ */
+export async function compileIfNecessary(
   sources: string[],
   outDir: string,
   strict = true
-): boolean {
-  const sourceSet = new Set([...sources, ...extendedSources(outDir)]);
+): Promise<ICompileIfNecessaryResult> {
+  const extendedSourceList = await extendedSources(outDir);
+  const sourceSet = new Set([...sources, ...extendedSourceList]);
   const allSources = [...sourceSet];
-  if (needsCompile(allSources, outDir)) {
-    _compileCount++;
-    const { compiled, localSources } = tsCompile(sources, {
+  if (await needsCompile(allSources, outDir)) {
+    const { compiled, localSources } = await tsCompile(sources, {
       outDir,
-      rootDir: fsRoot,
-      module: ts.ModuleKind.CommonJS,
-      moduleResolution: ts.ModuleResolutionKind.NodeJs,
+      rootDir: FS_ROOT,
+      module: ModuleKind.CommonJS,
+      moduleResolution: ModuleResolutionKind.Node10,
       esModuleInterop: true,
       resolveJsonModule: true,
       skipLibCheck: true,
       strict,
-      target: ts.ScriptTarget.ES2019,
-      noImplicitAny: false,
+      target: ScriptTarget.ESNext,
+      noImplicitAny: strict,
       noEmitOnError: true,
     });
     if (compiled) {
-      saveExtendedSources(outDir, localSources);
-      linkNodeModules(outDir);
+      await saveExtendedSources(outDir, localSources);
+      await linkNodeModules(outDir);
     }
-    return compiled;
+    return { success: compiled, compiled: compiled };
   }
-  return true;
+  return { success: true, compiled: false };
 }
 
-/** local sources used in last compilation, including imports */
-function extendedSources(outDir: string): string[] {
+/**
+ * local sources used in last compilation, including imports
+ * @internal
+ * @param outDir output directory
+ */
+async function extendedSources(outDir: string): Promise<string[]> {
   const file = sourcesFile(outDir);
-  if (!fs.existsSync(file)) {
+  if (!(await existsAsync(file))) {
     return [];
   }
-  const lines = fs.readFileSync(file, 'utf8');
+  const lines = await readFile(file, 'utf8');
   return lines.split('\n');
 }
 
+/**
+ * get the path for sourcesFiles
+ * @internal
+ * @param outDir
+ */
 function sourcesFile(outDir: string): string {
   return path.join(outDir, '_sources');
 }
 
-function saveExtendedSources(outDir: string, allSources: string[]): void {
+/**
+ * Save outputs
+ * @internal
+ * @param outDir
+ * @param allSources
+ */
+function saveExtendedSources(
+  outDir: string,
+  allSources: string[]
+): Promise<void> {
   const file = sourcesFile(outDir);
-  fs.writeFileSync(file, allSources.join('\n'));
+  return writeFile(file, allSources.join('\n'));
 }
 
-/** Put a link in the output directory to node_modules.
+/**
+ *Put a link in the output directory to node_modules.
+ * @internal
+ * @param outDir output directory
  */
-function linkNodeModules(outDir: string): void {
+async function linkNodeModules(outDir: string): Promise<void> {
   /*
    * Note that this only puts a link to the single node_modules directory
    * that's closest by.
@@ -123,34 +152,61 @@ function linkNodeModules(outDir: string): void {
    * e.g. encoding a full list of node_modules and setting NODE_PATH instead
    * of the symlink approach here.
    */
-  const nodeModules = nearestNodeModules(process.cwd());
+  const nodeModules = await nearestNodeModules(process.cwd());
   if (nodeModules) {
     const linkToModules = path.join(outDir, 'node_modules');
-    symLinkForce(nodeModules, linkToModules);
+    await symLinkForce(nodeModules, linkToModules);
   }
 }
 
-/** create a symlink, replacing any existing linkfile */
-export function symLinkForce(existing: string, link: string): void {
-  if (fs.existsSync(link)) {
-    if (!fs.lstatSync(link).isSymbolicLink()) {
+/**
+ * Determine if a path is a symbolic link
+ * @internal
+ * @param link path to the link
+ */
+async function isSymLink(link: string): Promise<boolean> {
+  const info = await lstat(link);
+  return info.isSymbolicLink();
+}
+
+/**
+ * Create a symlink if one doesn't exist.
+ * @internal
+ * If it does exist delete it.
+ * @param existing existing link
+ * @param link path to new link
+ */
+export async function symLinkForce(
+  existing: string,
+  link: string
+): Promise<void> {
+  if (await existsAsync(link)) {
+    if (!(await isSymLink(link))) {
       throw `symLinkForce refusing to unlink non-symlink ${link}`;
     }
-    fs.unlinkSync(link);
+    await unlink(link);
   }
-  const linkType: fs.symlink.Type | null =
-    process.platform === 'win32' ? 'junction' : null;
-  fs.symlinkSync(existing, link, linkType);
+  await symlink(
+    existing,
+    link,
+    process.platform === 'win32' ? 'junction' : null
+  );
 }
 
-/** @return the resolved path to the nearest node_modules file,
+/**
+ * Find the nearest node modules directory
+ * @internal
+ * @param dir directory to start looking from.
+ * @return the resolved path to the nearest node_modules file,
  * either in the provided directory or a parent.
  */
-export function nearestNodeModules(dir: string): string | undefined {
+export async function nearestNodeModules(
+  dir: string
+): Promise<string | undefined> {
   const resolvedDir = path.resolve(dir);
   const modulesFile = path.join(resolvedDir, 'node_modules');
 
-  if (fs.existsSync(modulesFile)) {
+  if (await existsAsync(modulesFile)) {
     return modulesFile;
   } else {
     const { dir: parent, root } = path.parse(resolvedDir);
@@ -165,30 +221,38 @@ export function nearestNodeModules(dir: string): string | undefined {
 /**
  * Compile a typescript config file to js if necessary (if the js
  * file doesn't exist or is older than the typescript file).
- *
+ * @internal
  * @param tsFile path to ts config file
  * @param outDir directory to place the compiled js file
+ * @param strict use strict compilation
  * @returns the path to the compiled javascript config file,
  *   or undefined if the compilation fails.
  */
-export function compileConfigIfNecessary(
+export async function compileConfigIfNecessary(
   tsFile: string,
   outDir: string,
-  strict = true
-): string | undefined {
-  if (!fs.existsSync(tsFile)) {
-    // console.error('config file:', tsFile, ' not found');
-    return undefined;
+  strict: boolean
+): Promise<ICompileIfNecessaryResult> {
+  if (!(await existsAsync(tsFile))) {
+    throw new Error(`config file: ${tsFile} not found`);
   }
 
-  const success = compileIfNecessary([tsFile], outDir, strict);
-  if (!success) {
-    return undefined;
+  const result = await compileIfNecessary([tsFile], outDir, strict);
+  if (!result.success) {
+    throw new Error(`failed to compile config file ${tsFile}`);
   }
-
-  return jsOutFile(tsFile, outDir);
+  return {
+    ...result,
+    output: jsOutFile(tsFile, outDir),
+  };
 }
 
+/**
+ * get a collection of inputs and mapped outputs
+ * @internal
+ * @param srcFiles files to be compiled
+ * @param outDir directory which compiled files reside
+ */
 function compilationPairs(
   srcFiles: string[],
   outDir: string
@@ -196,19 +260,30 @@ function compilationPairs(
   return srcFiles.map(tsFile => [tsFile, jsOutFile(tsFile, outDir)]);
 }
 
-function anyOutDated(filePairs: [string, string][]): boolean {
-  const found = filePairs.find(([srcPath, outPath]) => {
-    if (!fs.existsSync(outPath)) {
+/**
+ * Determine if any files are outdated
+ * @internal
+ * @param filePairs collection of inputs and output files
+ */
+async function anyOutDated(filePairs: [string, string][]): Promise<boolean> {
+  for (const pair of filePairs) {
+    const [srcPath, outPath] = pair;
+    if (!(await existsAsync(outPath))) {
       return true;
     }
-    const srcTime = fs.statSync(srcPath).mtime;
-    const outTime = fs.statSync(outPath).mtime;
+    const srcTime = (await stat(srcPath)).mtime;
+    const outTime = (await stat(outPath)).mtime;
     return srcTime > outTime;
-  });
-
-  return found !== undefined;
+  }
+  return false;
 }
 
+/**
+ * Change the suffix on a file
+ * @internal
+ * @param filePath path to the file
+ * @param suffix the new suffix
+ */
 function changeSuffix(filePath: string, suffix: string): string {
   const dir = path.dirname(filePath);
   const curSuffix = path.extname(filePath);

@@ -1,5 +1,5 @@
 import { loadTsConfig } from './loadTsConfig.js';
-import { CacheConfig } from './types.js';
+import { CacheConfig, CompileResult } from './types.js';
 
 export { loadTsConfig };
-export type { CacheConfig };
+export type { CacheConfig, CompileResult };

@@ -1,9 +1,10 @@
 {
-  "name": "config-file-ts-node",
+  "name": "config-file-ts-async",
   "version": "0.3.0-rc1",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "author": "lee mighdoll",
+  "author": "Shea Martin",
+  "contributors": ["lee mighdoll"],
   "type": "module",
   "description": "Use Typescript for configuration files. Types for safety. Compiled for speed. Built for Node JS.",
   "keywords": [
@@ -46,7 +47,7 @@
   "scripts": {
     "build:all": "npm run build:clean && npm run build:compile && npm run build:types",
     "build:types": "tsc --project ./tsconfig.types.json",
-    "build:compile": "tsc",
+    "build:compile": "tsc --project ./tsconfig.json",
     "build:clean": "npx rimraf dist",
     "test:all": "jest src",
     "publish:login": "npm login",
@@ -63,7 +64,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/sheam/config-file-ts"
+    "url": "https://github.com/sheam/config-file-ts-async"
   },
   "files": [
     "dist",
