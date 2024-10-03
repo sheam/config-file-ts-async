@@ -21,11 +21,11 @@ interface IDefaultModule<TConfig extends object> {
 //   cacheConfig: CacheConfig,
 //   strict = true
 // ): Promise<TConfig | undefined> {
-export function loadTsConfig<TConfig extends object>(
+export async function loadTsConfig<TConfig extends object>(
   tsFile: string,
   cacheConfig: CacheConfig,
   strict = true
-): TConfig | undefined {
+): Promise<TConfig | undefined> {
   const realOutDir = getOutDir(tsFile, cacheConfig);
   const jsConfig = compileConfigIfNecessary(tsFile, realOutDir, strict);
   if (!jsConfig) {
@@ -34,9 +34,7 @@ export function loadTsConfig<TConfig extends object>(
 
   const end = jsConfig.length - path.extname(jsConfig).length;
   const requirePath = jsConfig.slice(0, end);
-  // const config = await import(requirePath);
-  // eslint-disable-next-line
-  const config = require(requirePath);
+  const config = await import(requirePath);
   return (config as IDefaultModule<TConfig>).default;
 }
 

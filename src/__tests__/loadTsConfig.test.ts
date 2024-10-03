@@ -47,14 +47,14 @@ describe('loading', () => {
     rimrafSync(outDir);
   });
 
-  it('loading a config file', () => {
-    const conf = loadTsConfig<SomeConfig>(
+  it('loading a config file', async () => {
+    const conf = await loadTsConfig<SomeConfig>(
       exampleConfigFile,
       LOCAL_CACHE_CONFIG
     )!;
     expect(conf).toBeDefined();
-    expect(conf.foo).toEqual(someConfigUtil());
-    expect(conf.bar).toStrictEqual([1, 2, 3]);
+    expect(conf!.foo).toEqual(someConfigUtil());
+    expect(conf!.bar).toStrictEqual([1, 2, 3]);
   });
 
   it('loading a config file twice does not recompile', () => {
