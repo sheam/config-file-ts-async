@@ -2,31 +2,32 @@ import os, { platform } from 'os';
 import path from 'path';
 import { compileConfigIfNecessary } from './compileUtil.js';
 import { DEFAULT_CACHE_DIR } from './constants.js';
-import { CacheConfig } from './types.js';
+import { CacheConfig, ILoadOptions } from './types.js';
 
 /** Load a typescript configuration file.
  * For speed, the typescript file is transpiled to javascript and cached.
  * @internal
  * @param tsFile the file to compile
- * @param cacheConfig where to cache files.
- * @param strict use strict compilation mode
+ * @param loadOptions options how compilation happens, and where output is cached
  * @returns the default exported value from the configuration file or undefined
  */
 export async function loadTsConfig<TConfig extends object>(
   tsFile: string,
-  cacheConfig: CacheConfig,
-  strict = true
+  loadOptions: ILoadOptions
 ): Promise<TConfig> {
-  const realOutDir = getOutDir(tsFile, cacheConfig);
+  const realOutDir = getOutDir(tsFile, loadOptions.cacheConfig);
   const jsConfigCompileResult = await compileConfigIfNecessary(
     tsFile,
     realOutDir,
-    strict
+    loadOptions.compileConfig
   );
   if (!jsConfigCompileResult.success) {
     throw new Error(`Failed to compile config file ${tsFile}`);
   }
-  const modulePath = `file://${path.resolve(jsConfigCompileResult.output!)}`;
+  const modulePath: string =
+    loadOptions.compileConfig.module === 'NodeNext'
+      ? `file://${path.resolve(jsConfigCompileResult.output!)}`
+      : jsConfigCompileResult.output!;
   try {
     const config = await import(modulePath);
     return config.default as TConfig;

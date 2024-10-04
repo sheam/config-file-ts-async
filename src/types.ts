@@ -28,9 +28,13 @@ interface IProjectCacheConfig {
 export type CacheConfig = IGlobalCacheConfig | IProjectCacheConfig;
 
 export interface ICompileOptions {
-  cacheConfig: CacheConfig;
   strict?: boolean;
-  module?: 'CommonJS' | 'NodeNext';
+  module: 'CommonJS' | 'NodeNext';
+}
+
+export interface ILoadOptions {
+  cacheConfig: CacheConfig;
+  compileConfig: ICompileOptions;
 }
 
 export interface ICompileIfNecessaryResult {

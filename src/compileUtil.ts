@@ -3,7 +3,7 @@ import path from 'path';
 import { glob } from 'glob';
 import { ModuleKind, ScriptTarget } from 'typescript';
 import { tsCompile } from './tsCompile.js';
-import { ICompileIfNecessaryResult } from './types.js';
+import { ICompileIfNecessaryResult, ICompileOptions } from './types.js';
 import { existsAsync } from './util.js';
 const FS_ROOT = path.parse(process.cwd()).root;
 
@@ -63,12 +63,12 @@ potential parent directory imports.
  * @internal
  * @param sources sources to compile
  * @param outDir output directory
- * @param strict use strict compilation
+ * @param compileOptions options for us with compilation
  */
 export async function compileIfNecessary(
   sources: string[],
   outDir: string,
-  strict = true
+  compileOptions: ICompileOptions
 ): Promise<ICompileIfNecessaryResult> {
   const extendedSourceList = await extendedSources(outDir);
   const sourceSet = new Set([...sources, ...extendedSourceList]);
@@ -77,14 +77,14 @@ export async function compileIfNecessary(
     const { compiled, localSources } = await tsCompile(sources, {
       outDir,
       rootDir: FS_ROOT,
-      module: ModuleKind.CommonJS,
+      module: ModuleKind[compileOptions.module],
       // moduleResolution: ModuleResolutionKind.NodeNext,
       esModuleInterop: true,
       resolveJsonModule: true,
       skipLibCheck: true,
-      strict,
+      strict: compileOptions.strict === true,
       target: ScriptTarget.ES2019,
-      noImplicitAny: strict,
+      noImplicitAny: compileOptions.strict === true,
       noEmitOnError: true,
     });
     if (compiled) {
@@ -218,25 +218,25 @@ export async function nearestNodeModules(
 }
 
 /**
- * Compile a typescript config file to js if necessary (if the js
- * file doesn't exist or is older than the typescript file).
+ * Compile a typescript config file to js if necessary, if the js
+ * file doesn't exist or is older than the typescript file.
  * @internal
  * @param tsFile path to ts config file
  * @param outDir directory to place the compiled js file
- * @param strict use strict compilation
+ * @param compileOptions options for us with compilation
  * @returns the path to the compiled javascript config file,
  *   or undefined if the compilation fails.
  */
 export async function compileConfigIfNecessary(
   tsFile: string,
   outDir: string,
-  strict: boolean
+  compileOptions: ICompileOptions
 ): Promise<ICompileIfNecessaryResult> {
   if (!(await existsAsync(tsFile))) {
     throw new Error(`config file: ${tsFile} not found`);
   }
 
-  const result = await compileIfNecessary([tsFile], outDir, strict);
+  const result = await compileIfNecessary([tsFile], outDir, compileOptions);
   if (!result.success) {
     throw new Error(`failed to compile config file ${tsFile}`);
   }
@@ -277,21 +277,23 @@ async function anyOutDated(filePairs: [string, string][]): Promise<boolean> {
   return false;
 }
 
-const SUFFIX_MAP: { [key: string]: string } = {
+const suffixMap: { [key: string]: string } = {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   '.mts': '.mjs',
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   '.cts': '.cjs',
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   '.ts': '.js',
 };
 /**
- * Change the suffix on a file
+ * Change the suffix on a typescript file to be a javascript extension
  * @internal
- * @param filePath path to the file
- * @param suffix the new suffix
+ * @param filePath the file path with correct JS extension
  */
 function changeSuffix(filePath: string): string {
   const dir = path.dirname(filePath);
   const curSuffix = path.extname(filePath).toLowerCase();
-  const newSuffix = SUFFIX_MAP[curSuffix];
+  const newSuffix = suffixMap[curSuffix];
   const base = path.basename(filePath, curSuffix);
   return path.join(dir, base + newSuffix);
 }

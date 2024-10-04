@@ -13,7 +13,7 @@ import { CompileResult } from './types.js';
  * Compile sources
  * @internal
  * @param fileNames file name to compile
- * @param options
+ * @param options typesript compiler options
  */
 export function tsCompile(
   fileNames: string[],
@@ -21,7 +21,8 @@ export function tsCompile(
 ): Promise<CompileResult> {
   return new Promise<CompileResult>((resolve, reject) => {
     // TODO: log
-    // console.log('compiling:', fileNames);
+    // eslint-disable-next-line no-console
+    console.log('compiling:', fileNames);
     try {
       const program = createProgram(fileNames, options);
       const sources = program

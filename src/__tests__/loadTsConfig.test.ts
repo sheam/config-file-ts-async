@@ -2,7 +2,7 @@
 import { rimrafSync } from 'rimraf';
 import { getOutDir, loadTsConfig } from '../loadTsConfig.js';
 import { SomeConfig, someConfigUtil } from './SomeConfig.js';
-import { CacheConfig } from '../types.js';
+import { CacheConfig, ILoadOptions } from '../types.js';
 // @ts-ignore
 import path from 'path';
 // @ts-ignore
@@ -38,22 +38,23 @@ describe('cache dir', () => {
 });
 
 describe('loading', () => {
-  const LOCAL_CACHE_CONFIG: CacheConfig = {
-    cacheType: 'local',
-    cacheDir: '.config-file-ts-node-cache-tests',
+  const loadConfig: ILoadOptions = {
+    cacheConfig: {
+      cacheType: 'local',
+      cacheDir: '.config-file-ts-node-cache-tests',
+    },
+    compileConfig: {
+      module: 'CommonJS',
+    },
   };
   let outDir: string;
   beforeEach(() => {
-    outDir = getOutDir(exampleConfigFile, LOCAL_CACHE_CONFIG);
+    outDir = getOutDir(exampleConfigFile, loadConfig.cacheConfig);
     rimrafSync(outDir);
   });
 
   it('loading a config file', async () => {
-    const conf = await loadTsConfig<SomeConfig>(
-      exampleConfigFile,
-      LOCAL_CACHE_CONFIG,
-      false
-    )!;
+    const conf = await loadTsConfig<SomeConfig>(exampleConfigFile, loadConfig)!;
     expect(conf).toBeDefined();
     expect(conf!.foo).toEqual(someConfigUtil());
     expect(conf!.bar).toStrictEqual([1, 2, 3]);
