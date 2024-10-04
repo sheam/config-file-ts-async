@@ -16,15 +16,26 @@ export async function loadTsConfig<TConfig extends object>(
   tsFile: string,
   cacheConfig: CacheConfig,
   strict = true
-): Promise<TConfig | undefined> {
+): Promise<TConfig> {
   const realOutDir = getOutDir(tsFile, cacheConfig);
-  const jsConfig = await compileConfigIfNecessary(tsFile, realOutDir, strict);
-  if (!jsConfig.success) {
-    return undefined;
+  const jsConfigCompileResult = await compileConfigIfNecessary(
+    tsFile,
+    realOutDir,
+    strict
+  );
+  if (!jsConfigCompileResult.success) {
+    throw new Error(`Failed to compile config file ${tsFile}`);
   }
-  const modulePath = `${jsConfig.output}`;
-  const config = await import(modulePath);
-  return config.default as TConfig;
+  const modulePath = `file://${path.resolve(jsConfigCompileResult.output!)}`;
+  try {
+    const config = await import(modulePath);
+    return config.default as TConfig;
+  } catch (e: unknown) {
+    throw new Error(
+      `Failed to import compiled config file from ${modulePath}`,
+      { cause: e }
+    );
+  }
 }
 
 /**

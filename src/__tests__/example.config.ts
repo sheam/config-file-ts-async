@@ -1,4 +1,4 @@
-import * as os from 'os';
+import os from 'os';
 import { SomeConfig, someConfigUtil } from './SomeConfig.js';
 
 export default {

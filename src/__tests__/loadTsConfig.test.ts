@@ -14,7 +14,7 @@ export const exampleConfigFile = `${__dirname}/example.config.ts`;
 describe('cache dir', () => {
   it('local cache dir', () => {
     const config = {
-      type: 'local',
+      cacheType: 'local',
       cacheDir: '.config-file-ts-node-cache-tests',
     } as CacheConfig;
     const outDir = getOutDir(exampleConfigFile, config);
@@ -26,7 +26,7 @@ describe('cache dir', () => {
   });
   it('global cache dir', () => {
     const config = {
-      type: 'global',
+      cacheType: 'global',
       programName: 'config file tests',
     } as CacheConfig;
     const outDir = getOutDir(exampleConfigFile, config);
@@ -39,7 +39,7 @@ describe('cache dir', () => {
 
 describe('loading', () => {
   const LOCAL_CACHE_CONFIG: CacheConfig = {
-    type: 'local',
+    cacheType: 'local',
     cacheDir: '.config-file-ts-node-cache-tests',
   };
   let outDir: string;

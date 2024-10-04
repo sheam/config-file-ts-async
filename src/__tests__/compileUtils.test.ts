@@ -8,17 +8,24 @@ const CACHE_DIR = '.config-file-ts-cache';
 test('jsOutFile (windows)', () => {
   if (os.platform() !== 'win32') return;
 
-  const outFile = jsOutFile('test\\example.config.ts', CACHE_DIR);
-  const expected = `.config-file-ts-cache\\Users\\${process.env.USERNAME}\\source\\repos\\config-file-ts\\test\\example.config.js`;
+  const file = 'test/example.config.ts';
+  const outFile = jsOutFile(file, CACHE_DIR);
+  const expected = path.join(
+    CACHE_DIR,
+    process.cwd().replace(/^.:/, ''),
+    file.replace(/\.ts$/, '.js')
+  );
   expect(outFile).toEqual(expected);
 });
 
 test('jsOutFile (non-windows)', () => {
   if (os.platform() === 'win32') return;
 
+  const file = 'test/example.config.ts';
   const cwd = path.resolve(process.cwd());
-  const outFile = jsOutFile('test/example.config.ts', 'out');
-  expect(outFile).toEqual(path.join('out', cwd, 'test', 'example.config.js'));
+  const outFile = jsOutFile(file, CACHE_DIR);
+  const expected = path.join(CACHE_DIR, cwd, file);
+  expect(outFile).toEqual(expected);
 });
 
 test('nearestNodeModules', async () => {

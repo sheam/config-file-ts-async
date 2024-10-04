@@ -1,11 +1,10 @@
 import { lstat, readFile, stat, symlink, unlink, writeFile } from 'fs/promises';
 import path from 'path';
 import { glob } from 'glob';
-import { ModuleKind, ModuleResolutionKind, ScriptTarget } from 'typescript';
+import { ModuleKind, ScriptTarget } from 'typescript';
 import { tsCompile } from './tsCompile.js';
 import { ICompileIfNecessaryResult } from './types.js';
 import { existsAsync } from './util.js';
-
 const FS_ROOT = path.parse(process.cwd()).root;
 
 /**
@@ -37,7 +36,7 @@ export function jsOutFile(tsFile: string, outDir: string): string {
   const tsAbsoluteDir = path.dirname(tsAbsolutePath);
   const dirFromRoot = path.relative(FS_ROOT, tsAbsoluteDir);
   const jsDir = path.join(outDir, dirFromRoot);
-  const outFile = changeSuffix(path.basename(tsFile), '.js');
+  const outFile = changeSuffix(path.basename(tsFile));
   return path.join(jsDir, outFile);
 }
 
@@ -79,12 +78,12 @@ export async function compileIfNecessary(
       outDir,
       rootDir: FS_ROOT,
       module: ModuleKind.CommonJS,
-      moduleResolution: ModuleResolutionKind.Node10,
+      // moduleResolution: ModuleResolutionKind.NodeNext,
       esModuleInterop: true,
       resolveJsonModule: true,
       skipLibCheck: true,
       strict,
-      target: ScriptTarget.ESNext,
+      target: ScriptTarget.ES2019,
       noImplicitAny: strict,
       noEmitOnError: true,
     });
@@ -278,15 +277,21 @@ async function anyOutDated(filePairs: [string, string][]): Promise<boolean> {
   return false;
 }
 
+const SUFFIX_MAP: { [key: string]: string } = {
+  '.mts': '.mjs',
+  '.cts': '.cjs',
+  '.ts': '.js',
+};
 /**
  * Change the suffix on a file
  * @internal
  * @param filePath path to the file
  * @param suffix the new suffix
  */
-function changeSuffix(filePath: string, suffix: string): string {
+function changeSuffix(filePath: string): string {
   const dir = path.dirname(filePath);
-  const curSuffix = path.extname(filePath);
+  const curSuffix = path.extname(filePath).toLowerCase();
+  const newSuffix = SUFFIX_MAP[curSuffix];
   const base = path.basename(filePath, curSuffix);
-  return path.join(dir, base + suffix);
+  return path.join(dir, base + newSuffix);
 }

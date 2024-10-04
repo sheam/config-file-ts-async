@@ -1,11 +1,14 @@
 {
   "name": "config-file-ts-async",
   "version": "0.3.0-rc1",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.js",
   "author": "Shea Martin",
   "contributors": ["lee mighdoll"],
   "type": "module",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
+  },
   "description": "Use Typescript for configuration files. Types for safety. Compiled for speed. Built for Node JS.",
   "keywords": [
     "typescript",
@@ -45,8 +48,7 @@
     "ts-jest": "^29.2.5"
   },
   "scripts": {
-    "build:all": "npm run build:clean && npm run build:compile && npm run build:types",
-    "build:types": "tsc --project ./tsconfig.types.json",
+    "build:all": "npm run build:clean && npm run build:compile",
     "build:compile": "tsc --project ./tsconfig.json",
     "build:clean": "npx rimraf dist",
     "test:all": "jest src",
@@ -67,8 +69,7 @@
     "url": "https://github.com/sheam/config-file-ts-async"
   },
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "sideEffects": false,
   "license": "MIT"

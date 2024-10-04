@@ -12,5 +12,5 @@
     "skipLibCheck": true,
     "stripInternal": true
   },
-  "include": ["src/index.ts"]
+  "include": ["src/index.mts"]
 }
