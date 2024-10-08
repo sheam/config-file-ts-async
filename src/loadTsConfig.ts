@@ -2,7 +2,7 @@ import os, { platform } from 'os';
 import path from 'path';
 import { compileConfigIfNecessary } from './compileUtil.js';
 import { DEFAULT_CACHE_DIR } from './constants.js';
-import { CacheConfig, ICompileOptions, ILoadOptions } from './types.js';
+import { CacheConfig, ILoadOptions } from './types.js';
 
 /** Load a typescript configuration file.
  * For speed, the typescript file is transpiled to javascript and cached.
@@ -30,12 +30,8 @@ export async function loadTsConfig<TConfig extends object>(
     throw new Error(`No output generated for ${tsFile}`);
   }
 
-  const modulePath = getModulePath(
-    jsConfigCompileResult.output,
-    loadOptions.compileConfig
-  );
-  // console.log(`process.env.NODE_ENV: ${JSON.stringify(process.env.NODE_ENV)}`);
-  // console.log(`MODULE_FILE: ${modulePath}`);
+  const modulePath = getModulePath(jsConfigCompileResult.output);
+  // debugLog(`MODULE_FILE: ${modulePath}`);
   try {
     const config = await import(modulePath.replace(/\//g, '/'));
     return config.default as TConfig;
@@ -51,11 +47,8 @@ export async function loadTsConfig<TConfig extends object>(
   }
 }
 
-function getModulePath(
-  compileFiledJsPath: string,
-  compileConfig: ICompileOptions
-): string {
-  if (compileConfig.module === 'CommonJS' || process.env.NODE_ENV === 'test') {
+function getModulePath(compileFiledJsPath: string): string {
+  if (process.env.NODE_ENV === 'test') {
     return compileFiledJsPath;
   }
 

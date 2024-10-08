@@ -8,6 +8,7 @@ import {
   Program,
 } from 'typescript';
 import { CompileResult } from './types.js';
+import { debugLog } from './util.js';
 
 /**
  * Compile sources
@@ -20,9 +21,7 @@ export function tsCompile(
   options: CompilerOptions
 ): Promise<CompileResult> {
   return new Promise<CompileResult>((resolve, reject) => {
-    // TODO: log
-    // eslint-disable-next-line no-console
-    console.log(`compiling: ${fileNames}`);
+    debugLog(`compiling: ${fileNames}`);
     try {
       const program = createProgram(fileNames, options);
       const sources = program
@@ -54,16 +53,9 @@ function logDiagnostics(program: Program, emitResult: EmitResult): void {
       );
 
       const filePath = path.resolve(diagnostic.file.fileName);
-
-      // TODO: log
-      // eslint-disable-next-line no-console
-      console.log(
-        `tsc: (${filePath}:${line + 1}:${character + 1}): ${message}`
-      );
+      debugLog(`tsc: (${filePath}:${line + 1}:${character + 1}): ${message}`);
     } else {
-      // TODO: log
-      // eslint-disable-next-line no-console
-      console.log(flattenDiagnosticMessageText(diagnostic.messageText, '\n'));
+      debugLog(flattenDiagnosticMessageText(diagnostic.messageText, '\n'));
     }
   });
 }

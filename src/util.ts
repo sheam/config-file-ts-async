@@ -14,3 +14,10 @@ export async function existsAsync(path: PathLike): Promise<boolean> {
     return false;
   }
 }
+
+export function debugLog(msg: string): void {
+  if (process.env.DEBUG === 'true') {
+    // eslint-disable-next-line no-console
+    console.log(`CONFIG-FILE-TS(debug): ${msg}`);
+  }
+}

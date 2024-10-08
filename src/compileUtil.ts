@@ -5,7 +5,7 @@ import { FS_ROOT } from './constants.js';
 import { getTsCompileOptions } from './getCompileOptions.js';
 import { tsCompile } from './tsCompile.js';
 import { ICompileIfNecessaryResult, ICompileOptions } from './types.js';
-import { existsAsync } from './util.js';
+import { debugLog, existsAsync } from './util.js';
 
 /**
  * Determine if any files need compiling
@@ -21,7 +21,25 @@ export async function needsCompile(
   const fileLists = await Promise.all(filePromises);
   const files = fileLists.flat(1);
   const srcDestPairs = compilationPairs(files, outDir);
-  return anyOutDated(srcDestPairs);
+  // return anyOutDated(srcDestPairs);
+
+  for (const pair of srcDestPairs) {
+    const [srcPath, outPath] = pair;
+    if (!(await existsAsync(outPath))) {
+      debugLog(`need to compile because ${outPath} does not exist`);
+      return true;
+    }
+    const srcTime = (await stat(srcPath)).mtime;
+    const outTime = (await stat(outPath)).mtime;
+    if (srcTime > outTime) {
+      debugLog(
+        `need to compile because ${srcPath} is newer than ${outPath}: ${srcTime} > ${outTime}`
+      );
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /**
@@ -74,6 +92,9 @@ export async function compileIfNecessary(
   const sourceSet = new Set([...sources, ...extendedSourceList]);
   const allSources = [...sourceSet];
   if (await needsCompile(allSources, outDir)) {
+    debugLog(
+      `compiling one of the following changed: extendedSourceList=${JSON.stringify(extendedSourceList)} sources=${JSON.stringify(sources)}`
+    );
     const { compiled, localSources } = await tsCompile(
       sources,
       getTsCompileOptions(outDir, compileOptions)
@@ -121,7 +142,10 @@ function saveExtendedSources(
   allSources: string[]
 ): Promise<void> {
   const file = sourcesFile(outDir);
-  return writeFile(file, allSources.join('\n'));
+  return writeFile(
+    file,
+    allSources.filter(x => !x.includes('.yalc')).join('\n')
+  );
 }
 
 /**
@@ -248,24 +272,6 @@ function compilationPairs(
   outDir: string
 ): [string, string][] {
   return srcFiles.map(tsFile => [tsFile, jsOutFile(tsFile, outDir)]);
-}
-
-/**
- * Determine if any files are outdated
- * @internal
- * @param filePairs collection of inputs and output files
- */
-async function anyOutDated(filePairs: [string, string][]): Promise<boolean> {
-  for (const pair of filePairs) {
-    const [srcPath, outPath] = pair;
-    if (!(await existsAsync(outPath))) {
-      return true;
-    }
-    const srcTime = (await stat(srcPath)).mtime;
-    const outTime = (await stat(outPath)).mtime;
-    return srcTime > outTime;
-  }
-  return false;
 }
 
 const suffixMap: { [key: string]: string } = {
