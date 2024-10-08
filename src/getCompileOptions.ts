@@ -10,9 +10,10 @@ export function getTsCompileOptions(
     outDir,
     rootDir: FS_ROOT,
     module: ModuleKind[compileOptions.module] || ModuleKind.CommonJS,
+    allowJs: true,
     skipLibCheck: true,
-    strict: compileOptions.strict === true,
-    noImplicitAny: compileOptions.strict === true,
+    strict: compileOptions.strict,
+    noImplicitAny: compileOptions.strict,
     noEmitOnError: true,
   } as CompilerOptions;
 }

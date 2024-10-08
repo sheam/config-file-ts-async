@@ -8,19 +8,18 @@ import {
   nearestNodeModules,
   symLinkForce,
 } from '../compileUtil.js';
-import { DEFAULT_CACHE_DIR } from '../constants.js';
 import { ILoadOptions } from '../types.js';
 import { getOutDir } from '../loadTsConfig.js';
 import { rimrafSync } from 'rimraf';
+import { TEST_CACHE_DIR } from './contants.js';
 
-const CACHE_DIR = '.config-file-ts-cache';
 test('jsOutFile (windows)', () => {
   if (os.platform() !== 'win32') return;
 
   const file = 'test/example.config.ts';
-  const outFile = jsOutFile(file, CACHE_DIR);
+  const outFile = jsOutFile(file, TEST_CACHE_DIR);
   const expected = path.join(
-    CACHE_DIR,
+    TEST_CACHE_DIR,
     process.cwd().replace(/^.:/, ''),
     file.replace(/\.ts$/, '.js')
   );
@@ -32,8 +31,8 @@ test('jsOutFile (non-windows)', () => {
 
   const file = 'test/example.config.ts';
   const cwd = path.resolve(process.cwd());
-  const outFile = jsOutFile(file, CACHE_DIR);
-  const expected = path.join(CACHE_DIR, cwd, file);
+  const outFile = jsOutFile(file, TEST_CACHE_DIR);
+  const expected = path.join(TEST_CACHE_DIR, cwd, file);
   expect(outFile).toEqual(expected);
 });
 
@@ -60,7 +59,7 @@ test('symLinkForce deletes if necessary', async () => {
 describe('makes use of cache', () => {
   const exampleConfigFile = `${__dirname}/testconfigs/commonjs/example.commonjs.config.ts`;
   const config = {
-    cacheConfig: { cacheType: 'local', cacheDir: DEFAULT_CACHE_DIR },
+    cacheConfig: { cacheType: 'local', cacheDir: TEST_CACHE_DIR },
     compileConfig: {
       strict: false,
       module: 'CommonJS',

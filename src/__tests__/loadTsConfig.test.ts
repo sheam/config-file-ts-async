@@ -11,13 +11,14 @@ import {
   sampleCommonJsUtil,
   SomeConfigCommonJs,
 } from './testconfigs/commonjs/SomeConfigCommonJs.js';
+import { TEST_CACHE_DIR } from './contants.js';
 
 describe('cache dir', () => {
   const exampleConfigFile = `${__dirname}/example.config.ts`;
   it('local cache dir', () => {
     const config = {
       cacheType: 'local',
-      cacheDir: '.config-file-ts-node-cache-tests',
+      cacheDir: TEST_CACHE_DIR,
     } as CacheConfig;
     const outDir = getOutDir(exampleConfigFile, config);
     expect(outDir).toEqual(
@@ -44,7 +45,7 @@ describe('loading CommonJS config', () => {
   const loadConfig: ILoadOptions = {
     cacheConfig: {
       cacheType: 'local',
-      cacheDir: '.config-file-ts-node-cache-tests',
+      cacheDir: TEST_CACHE_DIR,
     },
     compileConfig: {
       module: 'CommonJS',

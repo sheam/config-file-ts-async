@@ -22,7 +22,7 @@ export function tsCompile(
   return new Promise<CompileResult>((resolve, reject) => {
     // TODO: log
     // eslint-disable-next-line no-console
-    console.log('compiling:', fileNames);
+    console.log(`compiling: ${fileNames}`);
     try {
       const program = createProgram(fileNames, options);
       const sources = program
