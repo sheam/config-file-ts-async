@@ -67,9 +67,9 @@ The options honoured are: strict and module. So you can put a tsconfig.json file
 ```json
 {
   "compilerOptions": {
-    "strict": true,
+    "strict": true, // this setting is honoured
     "module": "CommonJS", // or "NodeNext" is also supported
-    "target": "ESNext"
+    "target": "ESNext" // hardcoded: but set it in your tsconfig for linting purposes
   }
 }
 ```
