@@ -1,4 +1,4 @@
-import { CompilerOptions, ModuleKind } from 'typescript';
+import { CompilerOptions, ModuleKind, ScriptTarget } from 'typescript';
 import { FS_ROOT } from './constants.js';
 import { ICompileOptions } from './types.js';
 
@@ -8,6 +8,7 @@ export function getTsCompileOptions(
 ): CompilerOptions {
   return {
     outDir,
+    target: ScriptTarget.ESNext,
     rootDir: FS_ROOT,
     module: ModuleKind[compileOptions.module] || ModuleKind.CommonJS,
     allowJs: true,
