@@ -58,3 +58,18 @@ const config = await loadTsConfig<MyConfig>('my.config.ts', {
   cacheType: 'local',
 });
 ```
+
+### tsconfig.json
+
+You can control how the config file is compiled with a TS Config file.
+The options honoured are: strict and module. So you can put a tsconfig.json file beside your config file:
+
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "module": "CommonJS", // or "NodeNext" is also supported
+    "target": "ESNext"
+  }
+}
+```
