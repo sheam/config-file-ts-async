@@ -52,6 +52,7 @@ describe('loading CommonJS config', () => {
     },
     compileConfig: {
       module: 'CommonJS',
+      strict: false,
     },
   };
   let outDir: string;
@@ -87,6 +88,7 @@ describe('loading NodeNext config', () => {
     },
     compileConfig: {
       module: 'NodeNext',
+      strict: false,
     },
   };
   let outDir: string;

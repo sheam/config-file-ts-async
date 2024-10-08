@@ -1,7 +1,7 @@
 import { find as findTsConfig, load as loadTsConfig } from 'tsconfig';
 import { ICompileOptions } from './types.js';
 
-const DefaultCompileOptions = {
+export const DEFAULT_COMPILER_OPTIONS = {
   strict: false,
   module: 'CommonJS',
 } as ICompileOptions;
@@ -21,7 +21,10 @@ export async function getNearestTsConfigCompilerOptions(
 ): Promise<ILoadConfigResult> {
   const tsConfigFilePath = await findTsConfig(startDir);
   if (!tsConfigFilePath) {
-    return { compilerOptions: DefaultCompileOptions, tsConfigPath: undefined };
+    return {
+      compilerOptions: DEFAULT_COMPILER_OPTIONS,
+      tsConfigPath: undefined,
+    };
   }
   const loadResult = await loadTsConfig(tsConfigFilePath);
   const options = loadResult.config.compilerOptions;

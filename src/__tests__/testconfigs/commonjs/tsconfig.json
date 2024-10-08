@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2019",
-    "strict": true,
     "module": "CommonJS"
+    //    "strict": false, // leave commented out for unit tests
   }
 }

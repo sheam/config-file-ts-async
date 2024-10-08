@@ -5,4 +5,5 @@ export default {
   foo: sampleCommonJsUtil(),
   bar: [1, 2, 3],
   driver: os.userInfo().username,
+  file: { reason: 'test-compile' },
 } as SomeConfigCommonJs;
