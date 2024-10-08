@@ -1,10 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { rimrafSync } from 'rimraf';
 import { getOutDir, loadTsConfig } from '../loadTsConfig.js';
-// import {
-//   sampleNodeNextUtil,
-//   SomeConfigNodeNext,
-// } from './testconfigs/nodenext/SomeConfigNodeNext.mjs';
 import { CacheConfig, ILoadOptions } from '../types.js';
 // @ts-ignore
 import path from 'path';
@@ -70,17 +66,10 @@ describe('loading CommonJS config', () => {
     expect(conf!.foo).toEqual(sampleCommonJsUtil());
     expect(conf!.bar).toStrictEqual([1, 2, 3]);
   });
-
-  //TODO
-  // it('loading a config file twice does not recompile', async () => {
-  //   const firstResult = await loadTsConfig(exampleConfigFile, LOCAL_CACHE_CONFIG);
-  //   const secondResult = await loadTsConfig(exampleConfigFile, LOCAL_CACHE_CONFIG);
-  //   expect(firstResult.).toEqual(1);
-  // });
 });
 
 describe('loading NodeNext config', () => {
-  const exampleConfigFile = `${__dirname}/testconfigs/nodenext/example.nodenext.config.mts`;
+  const exampleConfigFile = `${__dirname}/testconfigs/nodenext/example.nodenext.config.ts`;
   const loadConfig: ILoadOptions = {
     cacheConfig: {
       cacheType: 'local',
@@ -91,23 +80,12 @@ describe('loading NodeNext config', () => {
       strict: false,
     },
   };
-  let outDir: string;
-  beforeEach(() => {
-    outDir = getOutDir(exampleConfigFile, loadConfig.cacheConfig);
-    rimrafSync(outDir);
-  });
 
   it('loading a config file', async () => {
+    rimrafSync((loadConfig.cacheConfig as any).cacheDir);
     const conf = await loadTsConfig<any>(exampleConfigFile, loadConfig)!;
     expect(conf).toBeDefined();
     // expect(conf!.foo).toEqual(sampleNodeNextUtil());
     // expect(conf!.bar).toStrictEqual([1, 2, 3]);
   });
-
-  //TODO
-  // it('loading a config file twice does not recompile', async () => {
-  //   const firstResult = await loadTsConfig(exampleConfigFile, LOCAL_CACHE_CONFIG);
-  //   const secondResult = await loadTsConfig(exampleConfigFile, LOCAL_CACHE_CONFIG);
-  //   expect(firstResult.).toEqual(1);
-  // });
 });

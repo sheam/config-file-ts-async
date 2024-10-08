@@ -2,7 +2,16 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { jsOutFile, nearestNodeModules, symLinkForce } from '../compileUtil.js';
+import {
+  compileConfigIfNecessary,
+  jsOutFile,
+  nearestNodeModules,
+  symLinkForce,
+} from '../compileUtil.js';
+import { DEFAULT_CACHE_DIR } from '../constants.js';
+import { ILoadOptions } from '../types.js';
+import { getOutDir } from '../loadTsConfig.js';
+import { rimrafSync } from 'rimraf';
 
 const CACHE_DIR = '.config-file-ts-cache';
 test('jsOutFile (windows)', () => {
@@ -46,4 +55,37 @@ test('symLinkForce deletes if necessary', async () => {
   } finally {
     fs.rmSync(tempDir, { recursive: true });
   }
+});
+
+describe('makes use of cache', () => {
+  const exampleConfigFile = `${__dirname}/testconfigs/commonjs/example.commonjs.config.ts`;
+  const config = {
+    cacheConfig: { cacheType: 'local', cacheDir: DEFAULT_CACHE_DIR },
+    compileConfig: {
+      strict: false,
+      module: 'CommonJS',
+    },
+  } as ILoadOptions;
+  const outDir = getOutDir(exampleConfigFile, config.cacheConfig);
+  beforeEach(() => {
+    rimrafSync(outDir);
+  });
+  it('loading a config file twice does not recompile', async () => {
+    const realOutDir = getOutDir(exampleConfigFile, config.cacheConfig);
+    const firstResult = await compileConfigIfNecessary(
+      exampleConfigFile,
+      realOutDir,
+      config.compileConfig
+    );
+    const secondResult = await compileConfigIfNecessary(
+      exampleConfigFile,
+      realOutDir,
+      config.compileConfig
+    );
+    expect(firstResult.success).toBe(true);
+    expect(firstResult.compiled).toBe(true);
+
+    expect(secondResult.success).toBe(true);
+    expect(secondResult.compiled).toBe(false);
+  });
 });

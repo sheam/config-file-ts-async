@@ -1,11 +1,11 @@
 import { lstat, readFile, stat, symlink, unlink, writeFile } from 'fs/promises';
 import path from 'path';
 import { glob } from 'glob';
-import { ModuleKind, ScriptTarget } from 'typescript';
+import { FS_ROOT } from './constants.js';
+import { getTsCompileOptions } from './getCompileOptions.js';
 import { tsCompile } from './tsCompile.js';
 import { ICompileIfNecessaryResult, ICompileOptions } from './types.js';
 import { existsAsync } from './util.js';
-const FS_ROOT = path.parse(process.cwd()).root;
 
 /**
  * Determine if any files need compiling
@@ -74,19 +74,10 @@ export async function compileIfNecessary(
   const sourceSet = new Set([...sources, ...extendedSourceList]);
   const allSources = [...sourceSet];
   if (await needsCompile(allSources, outDir)) {
-    const { compiled, localSources } = await tsCompile(sources, {
-      outDir,
-      rootDir: FS_ROOT,
-      module: ModuleKind[compileOptions.module],
-      // moduleResolution: ModuleResolutionKind.NodeNext,
-      esModuleInterop: true,
-      resolveJsonModule: true,
-      skipLibCheck: true,
-      strict: compileOptions.strict === true,
-      target: ScriptTarget.ES2019,
-      noImplicitAny: compileOptions.strict === true,
-      noEmitOnError: true,
-    });
+    const { compiled, localSources } = await tsCompile(
+      sources,
+      getTsCompileOptions(outDir, compileOptions)
+    );
     if (compiled) {
       await saveExtendedSources(outDir, localSources);
       await linkNodeModules(outDir);

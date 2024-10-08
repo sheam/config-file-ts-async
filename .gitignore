@@ -8,4 +8,5 @@ dist/
 testsrc/
 .yalc/
 yalc.lock
+.ts-config-file-cache/
 

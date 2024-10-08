@@ -2,7 +2,7 @@ import os from 'os';
 import {
   SomeConfigNodeNext,
   sampleNodeNextUtil,
-} from './SomeConfigNodeNext.mjs';
+} from './SomeConfigNodeNext.js';
 
 export default {
   foo: sampleNodeNextUtil(),

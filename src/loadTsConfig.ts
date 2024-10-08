@@ -29,13 +29,7 @@ export async function loadTsConfig<TConfig extends object>(
   if (!jsConfigCompileResult.output) {
     throw new Error(`No output generated for ${tsFile}`);
   }
-  // const modulePath: string =
-  //   `file://${path.resolve(jsConfigCompileResult.output)}`.replace(/\\/g, '/');
-  // const modulePath: string = jsConfigCompileResult.output;
-  const modulePath: string =
-    loadOptions.compileConfig.module === 'NodeNext'
-      ? `file://${path.resolve(jsConfigCompileResult.output)}`
-      : jsConfigCompileResult.output;
+  const modulePath: string = jsConfigCompileResult.output;
   try {
     const config = await import(modulePath);
     return config.default as TConfig;
