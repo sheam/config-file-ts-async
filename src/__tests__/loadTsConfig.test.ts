@@ -1,17 +1,23 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { rimrafSync } from 'rimraf';
 import { getOutDir, loadTsConfig } from '../loadTsConfig.js';
-import { SomeConfig, someConfigUtil } from './SomeConfig.js';
+// import {
+//   sampleNodeNextUtil,
+//   SomeConfigNodeNext,
+// } from './testconfigs/nodenext/SomeConfigNodeNext.mjs';
 import { CacheConfig, ILoadOptions } from '../types.js';
 // @ts-ignore
 import path from 'path';
 // @ts-ignore
 import os from 'os';
 import { DEFAULT_CACHE_DIR } from '../constants.js';
-
-export const exampleConfigFile = `${__dirname}/example.config.ts`;
+import {
+  sampleCommonJsUtil,
+  SomeConfigCommonJs,
+} from './testconfigs/commonjs/SomeConfigCommonJs.js';
 
 describe('cache dir', () => {
+  const exampleConfigFile = `${__dirname}/example.config.ts`;
   it('local cache dir', () => {
     const config = {
       cacheType: 'local',
@@ -37,7 +43,8 @@ describe('cache dir', () => {
   });
 });
 
-describe('loading', () => {
+describe('loading CommonJS config', () => {
+  const exampleConfigFile = `${__dirname}/testconfigs/commonjs/example.commonjs.config.ts`;
   const loadConfig: ILoadOptions = {
     cacheConfig: {
       cacheType: 'local',
@@ -54,10 +61,45 @@ describe('loading', () => {
   });
 
   it('loading a config file', async () => {
-    const conf = await loadTsConfig<SomeConfig>(exampleConfigFile, loadConfig)!;
+    const conf = await loadTsConfig<SomeConfigCommonJs>(
+      exampleConfigFile,
+      loadConfig
+    )!;
     expect(conf).toBeDefined();
-    expect(conf!.foo).toEqual(someConfigUtil());
+    expect(conf!.foo).toEqual(sampleCommonJsUtil());
     expect(conf!.bar).toStrictEqual([1, 2, 3]);
+  });
+
+  //TODO
+  // it('loading a config file twice does not recompile', async () => {
+  //   const firstResult = await loadTsConfig(exampleConfigFile, LOCAL_CACHE_CONFIG);
+  //   const secondResult = await loadTsConfig(exampleConfigFile, LOCAL_CACHE_CONFIG);
+  //   expect(firstResult.).toEqual(1);
+  // });
+});
+
+describe('loading NodeNext config', () => {
+  const exampleConfigFile = `${__dirname}/testconfigs/nodenext/example.nodenext.config.mts`;
+  const loadConfig: ILoadOptions = {
+    cacheConfig: {
+      cacheType: 'local',
+      cacheDir: '.config-file-ts-node-cache-tests',
+    },
+    compileConfig: {
+      module: 'NodeNext',
+    },
+  };
+  let outDir: string;
+  beforeEach(() => {
+    outDir = getOutDir(exampleConfigFile, loadConfig.cacheConfig);
+    rimrafSync(outDir);
+  });
+
+  it('loading a config file', async () => {
+    const conf = await loadTsConfig<any>(exampleConfigFile, loadConfig)!;
+    expect(conf).toBeDefined();
+    // expect(conf!.foo).toEqual(sampleNodeNextUtil());
+    // expect(conf!.bar).toStrictEqual([1, 2, 3]);
   });
 
   //TODO

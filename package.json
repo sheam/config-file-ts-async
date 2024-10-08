@@ -25,7 +25,8 @@
   ],
   "dependencies": {
     "glob": "^10.3.12",
-    "typescript": "^5.4.3"
+    "typescript": "^5.4.3",
+    "tsconfig": "^7.0.0"
   },
   "devDependencies": {
     "@types/glob": "^8.1.0",

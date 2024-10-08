@@ -8,7 +8,9 @@ import { CacheConfig, ILoadOptions } from './types.js';
  * For speed, the typescript file is transpiled to javascript and cached.
  * @internal
  * @param tsFile the file to compile
- * @param loadOptions options how compilation happens, and where output is cached
+ * @param loadOptions options how compilation happens, and where output is cached.
+ *                    Note that you can use getNearestTsConfigCompilerOptions()
+ *                    to get the compile options from the nearest tsConfig.
  * @returns the default exported value from the configuration file or undefined
  */
 export async function loadTsConfig<TConfig extends object>(
@@ -24,14 +26,24 @@ export async function loadTsConfig<TConfig extends object>(
   if (!jsConfigCompileResult.success) {
     throw new Error(`Failed to compile config file ${tsFile}`);
   }
+  if (!jsConfigCompileResult.output) {
+    throw new Error(`No output generated for ${tsFile}`);
+  }
+  // const modulePath: string =
+  //   `file://${path.resolve(jsConfigCompileResult.output)}`.replace(/\\/g, '/');
+  // const modulePath: string = jsConfigCompileResult.output;
   const modulePath: string =
     loadOptions.compileConfig.module === 'NodeNext'
-      ? `file://${path.resolve(jsConfigCompileResult.output!)}`
-      : jsConfigCompileResult.output!;
+      ? `file://${path.resolve(jsConfigCompileResult.output)}`
+      : jsConfigCompileResult.output;
   try {
     const config = await import(modulePath);
     return config.default as TConfig;
   } catch (e: unknown) {
+    // eslint-disable-next-line no-console
+    console.error(
+      `Failed to import compiled config file from ${modulePath}\n${e}\nmodule=${loadOptions.compileConfig.module}`
+    );
     throw new Error(
       `Failed to import compiled config file from ${modulePath}`,
       { cause: e }
