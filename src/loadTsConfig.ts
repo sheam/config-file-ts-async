@@ -31,16 +31,18 @@ export async function loadTsConfig<TConfig extends object>(
     throw new Error(`No output generated for ${tsFile}`);
   }
 
-  const modulePath = getModulePath(jsConfigCompileResult.output);
+  const modulePath = getModulePath(
+    jsConfigCompileResult.output.replace(/\//g, '/')
+  );
   // debugLog(`MODULE_FILE: ${modulePath}`);
   try {
-    const config = await import(modulePath.replace(/\//g, '/'));
+    const config = await import(modulePath);
     if (config.default.default) {
       debugLog('using config.default.default');
       return config.default.default as TConfig;
     } else {
       debugLog('using config.default');
-      return config.default.default as TConfig;
+      return config.default as TConfig;
     }
   } catch (e: unknown) {
     // eslint-disable-next-line no-console
