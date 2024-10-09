@@ -3,6 +3,7 @@ import path from 'path';
 import { compileConfigIfNecessary } from './compileUtil.js';
 import { DEFAULT_CACHE_DIR } from './constants.js';
 import { CacheConfig, ILoadOptions } from './types.js';
+import { debugLog } from './util.js';
 
 /** Load a typescript configuration file.
  * For speed, the typescript file is transpiled to javascript and cached.
@@ -34,7 +35,13 @@ export async function loadTsConfig<TConfig extends object>(
   // debugLog(`MODULE_FILE: ${modulePath}`);
   try {
     const config = await import(modulePath.replace(/\//g, '/'));
-    return config.default as TConfig;
+    if (config.default.default) {
+      debugLog('using config.default.default');
+      return config.default.default as TConfig;
+    } else {
+      debugLog('using config.default');
+      return config.default.default as TConfig;
+    }
   } catch (e: unknown) {
     // eslint-disable-next-line no-console
     console.error(

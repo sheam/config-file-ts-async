@@ -6,4 +6,5 @@ export default {
   bar: [1, 2, 3],
   driver: os.userInfo().username,
   file: { reason: 'test-compile' },
+  configType: 'CommonJS',
 } as SomeConfigCommonJs;

@@ -9,4 +9,5 @@ export default {
   bar: [1, 2, 3],
   driver: os.userInfo().username,
   file: { reason: 'test-compile' },
+  configType: 'NodeNext',
 } as SomeConfigNodeNext;

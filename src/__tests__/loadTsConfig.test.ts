@@ -12,6 +12,7 @@ import {
   SomeConfigCommonJs,
 } from './testconfigs/commonjs/SomeConfigCommonJs.js';
 import { TEST_CACHE_DIR } from './contants.js';
+import { sampleNodeNextUtil } from './testconfigs/nodenext/SomeConfigNodeNext.js';
 
 describe('cache dir', () => {
   const exampleConfigFile = `${__dirname}/example.config.ts`;
@@ -66,6 +67,7 @@ describe('loading CommonJS config', () => {
     expect(conf).toBeDefined();
     expect(conf!.foo).toEqual(sampleCommonJsUtil());
     expect(conf!.bar).toStrictEqual([1, 2, 3]);
+    expect(conf.configType).toBe('CommonJS');
   });
 });
 
@@ -86,7 +88,8 @@ describe('loading NodeNext config', () => {
     rimrafSync((loadConfig.cacheConfig as any).cacheDir);
     const conf = await loadTsConfig<any>(exampleConfigFile, loadConfig)!;
     expect(conf).toBeDefined();
-    // expect(conf!.foo).toEqual(sampleNodeNextUtil());
-    // expect(conf!.bar).toStrictEqual([1, 2, 3]);
+    expect(conf.configType).toBe('NodeNext');
+    expect(conf!.foo).toEqual(sampleNodeNextUtil());
+    expect(conf!.bar).toStrictEqual([1, 2, 3]);
   });
 });

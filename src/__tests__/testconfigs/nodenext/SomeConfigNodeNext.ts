@@ -5,6 +5,7 @@ export interface SomeConfigNodeNext {
   bar?: number[];
   driver?: string;
   file: SharedFile;
+  configType: 'NodeNext';
 }
 
 export function sampleNodeNextUtil(): string {
