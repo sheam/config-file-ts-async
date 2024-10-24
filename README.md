@@ -2,12 +2,20 @@
 
 _Just use TypeScript for configuration files._
 
-####
-
-### Summary
+#### Fork Info
 
 Based on config-file-ts by _lee mighdoll_.
-This version adds support for asynchronous opperations, and more flexible cache storage.
+This version adds support for the following
+
+- asynchronous operations
+- flexible cache storage locations
+- reads nearest tsconfig.json file to get _some_ settings.
+
+If you feel like helping me justify the time I am spending on an already great package...
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/sheamus)
+
+### Summary
 
 TypeScript is more syntactically **flexible** than JSON. Comments are allowed. Keys needn't be quoted.
 Arrays can have trailing commas.
